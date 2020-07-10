@@ -1,0 +1,7 @@
+C:\Users\benja\source\repos\PerlinNDim\PerlinNDim\obj\Debug\PerlinNDim.csprojAssemblyReference.cache
+C:\Users\benja\source\repos\PerlinNDim\PerlinNDim\obj\Debug\PerlinNDim.csproj.CoreCompileInputs.cache
+C:\Users\benja\source\repos\PerlinNDim\PerlinNDim\bin\Debug\Geologik.exe.config
+C:\Users\benja\source\repos\PerlinNDim\PerlinNDim\bin\Debug\Geologik.exe
+C:\Users\benja\source\repos\PerlinNDim\PerlinNDim\bin\Debug\Geologik.pdb
+C:\Users\benja\source\repos\PerlinNDim\PerlinNDim\obj\Debug\Geologik.exe
+C:\Users\benja\source\repos\PerlinNDim\PerlinNDim\obj\Debug\Geologik.pdb
