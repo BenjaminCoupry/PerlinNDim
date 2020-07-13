@@ -11,10 +11,15 @@ namespace Geologik
         public enum TypeInterpolation { Lineaire, Cosinus, Hermite, C2 };
         static void Main(string[] args)
         {
-            Random r = new Random();
+            Random r = new Random(454542);
             double scale = 0.005;
-            Application p1 = perlin(10000, TypeInterpolation.C2, 7, 3, 1, 10, 1.1, 0, 0.7);
-            Application p2 = perlin(55656, TypeInterpolation.C2, 7, 3, 0.4, 10, 1.1, 0, 0.7);
+            Application p1 = perlin(10000, TypeInterpolation.C2, 7, 0.1, 0.5, 5, 1.1, 0, 0.7);
+            Application shift = (x) => ((p1(x) * 2) - 1);
+            Application p2 = perlin(55656, TypeInterpolation.C2, 7, 3, 0.4, 0.5, 1.1, 0, 0.7);
+            double[,] crateres = sample2D(300, 300, 1.0 / 100, p1);
+            crateres = Bombarder(crateres,20, 1,ref r, shift,15, 110, 0.1, 1, 0.1, 1, 0.05, 1,5,0.5);
+            visu2D(crateres, false).Save("D:/lab/Terrain/Crateres.bmp");
+            /**
             Application rings = Ondelettes(2, new double[] { -0.5, -0.5 });
             double[,] grille = sample2D(100, 100, 1.0/100, p1);
             Normer(grille);
@@ -32,7 +37,7 @@ namespace Geologik
             }
             double[,] lacs = altitudesLacs(grille, 0, 0.005);
             visu2D(lacs, false).Save("D:/lab/Terrain/LACS.bmp");
-
+            **/
             /**
             Frame fr = () => { erosionTerrainCroisee(ref r, ref grille, new double[] { 0.2, 1 }, 1000, 0.5, 0.0002, 3, 0.05, 0.05, 2600, scale);
                 return visu2D(grille, false); };
@@ -376,13 +381,14 @@ namespace Geologik
             int x = grille.GetLength(0);
             int y = grille.GetLength(1);
             Bitmap retour = new Bitmap(x, y);
-            //Normer(grille);
+            double[,] gN = (double[,])grille.Clone();
+            Normer(gN);
             for(int i=0;i<x;i++)
             {
                 for(int j=0;j<y;j++)
                 {
 
-                    double y_ = grille[i, j];
+                    double y_ = gN[i, j];
                     Color c;
                     double hue = y_ ;
                     int val;
@@ -828,7 +834,7 @@ namespace Geologik
                             {
                                 double r = Math.Sqrt((double)(l * l) + (double)(k * k));
                                 double coeff;
-                                coeff = 1.0 / (1.0 + r * r);
+                                coeff = 1.0 / (1.0 + r);
                                 int inext = Math.Min(X - 1, Math.Max(0, i + k));
                                 int jnext = Math.Min(Y - 1, Math.Max(0, j + l));
                                 double val = grille[inext, jnext];
@@ -900,7 +906,7 @@ namespace Geologik
                 return Math.Cos(normeVect(x) * f * Math.PI * 2);
                 };
         }
-        public static double[,] froisser(double[,] grille,double[] direction,double[] decalage, double sigma, double f, Application motif1D, Application perlin,Application front,double scale,double amplitude,double amplitudeFront,double f_decalageFront)
+        public static double[,] froisser(double[,] grille,double[] direction,double[] decalage, double SigmaAttenuationLaterale, double FrequenceColineaire, Application MotifColineaire, Application BruitMultiplicatif,Application MotifNormal,double scale,double amplitude,double AmplitudeMotifNormal,double frequence_decalageFront)
         {
             int X = grille.GetLength(0);
             int Y = grille.GetLength(1);
@@ -915,8 +921,8 @@ namespace Geologik
                     double proj = x_[0] * direction[0] + x_[1] * direction[1];
                     double[] ecartement = new double[] { x_[0] - proj * direction[0], x_[0] - proj * direction[0] };
                     double dist = norme(ecartement);
-                    double posFront = proj - front(new double[] {dist*Math.Sign(ecartement[0])-proj*f_decalageFront})*amplitudeFront;
-                    double y_ = motif1D(new double[] { posFront*f }) * Math.Exp(-Math.Pow(dist / sigma, 2)) * perlin(x_);
+                    double posFront = proj - MotifNormal(new double[] {dist*Math.Sign(ecartement[0])-proj*frequence_decalageFront})*AmplitudeMotifNormal;
+                    double y_ = MotifColineaire(new double[] { posFront*FrequenceColineaire }) * Math.Exp(-Math.Pow(dist / SigmaAttenuationLaterale, 2)) * BruitMultiplicatif(x_);
                     retour[i, j] =grille[i,j]+  y_*amplitude;
                 }
             }
@@ -924,7 +930,54 @@ namespace Geologik
             return retour;
         }
 
-
+        //Spatial
+        public static double HauteurCratere(double rayon, double R0, double RaideurCassure,double HauteurCassure, double RaideurDepression, double AmplitudeDepression, double RaideurRebond, double H0)
+        {
+            double depress = -AmplitudeDepression / (1.0 + Math.Exp(RaideurDepression * (rayon - R0)));
+            double cass = Math.Exp(-Math.Abs(rayon - R0)*RaideurCassure)*(HauteurCassure+AmplitudeDepression/2.0);
+            double h0 = -AmplitudeDepression / (1.0 + Math.Exp(RaideurDepression * (-R0))) + Math.Exp(-Math.Abs(-R0)) * (HauteurCassure + AmplitudeDepression / 2.0);
+            double reb = Math.Exp(-RaideurRebond * Math.Pow(rayon, 2)) * (H0 - h0);
+            return depress + cass + reb;
+        }
+        public static double[,] Impact(double[,] grille, double scale, double[] position, Application BruitRayon,double AmplitudeBruit, double R0, double RaideurCassure, double HauteurCassure, double RaideurDepression, double AmplitudeDepression, double RaideurRebond, double H0,double AttenuationLissage, double RayonLissageRelatif)
+        {
+            int X = grille.GetLength(0);
+            int Y = grille.GetLength(1);
+            double[,] retour = new double[X, Y];
+            int RayonLissage = (int)(RayonLissageRelatif * R0 / scale);
+            double[,] lisse = lissage(grille,RayonLissage );
+            
+            for (int i = 0; i < X; i++)
+            {
+                for (int j = 0; j < Y; j++)
+                {
+                    double[] x_ = new double[] { i * scale, j * scale};
+                    double r = Math.Sqrt(Math.Pow(x_[0] - position[0], 2) + Math.Pow(x_[1] - position[1], 2)) + BruitRayon(x_)*AmplitudeBruit;
+                    double h = HauteurCratere(r, R0, RaideurCassure, HauteurCassure, RaideurDepression, AmplitudeDepression, RaideurRebond, H0);
+                    double k_lissage = Math.Exp(-AttenuationLissage * r/R0);
+                    retour[i, j] = (1.0-k_lissage)*grille[i, j] + k_lissage*lisse[i,j] + h;
+                }
+            }
+            return retour;
+        }
+        public static double[,] ImpactAleatoire(double[,] grille, double scale,ref Random r, Application BruitRayon,double AmplitudeBruitMax, double R0Max, double RaideurCassureMax, double HauteurCassureMax, double RaideurDepressionMax, double AmplitudeDepressionMax, double RaideurRebondMax, double H0Max, double AttenuationLissageMax, double RayonLissageRelatifMax)
+        {
+            int X = grille.GetLength(0);
+            int Y = grille.GetLength(1);
+            double[] position = new double[] {X*scale*r.NextDouble(), Y * scale * r.NextDouble() };
+            return Impact(grille, scale, position, BruitRayon,AmplitudeBruitMax*r.NextDouble(), R0Max * r.NextDouble(), RaideurCassureMax * r.NextDouble(), HauteurCassureMax * r.NextDouble(),  RaideurDepressionMax * r.NextDouble(), AmplitudeDepressionMax * r.NextDouble(), RaideurRebondMax * r.NextDouble(), H0Max * r.NextDouble(), AttenuationLissageMax*r.NextDouble(), RayonLissageRelatifMax*r.NextDouble());
+        }
+        public static double[,] Bombarder(double[,] grille, int nbImpacts, double scale, ref Random r, Application BruitRayon, double AmplitudeBruitMax, double R0Max, double RaideurCassureMax, double HauteurCassureMax, double RaideurDepressionMax, double AmplitudeDepressionMax, double RaideurRebondMax, double H0Max, double AttenuationLissageMax, double RayonLissageRelatifMax)
+        {
+            double[,] resultat = (double[,])grille.Clone();
+            for(int i=0;i<nbImpacts;i++)
+            {
+                Console.WriteLine(i);
+                resultat = ImpactAleatoire(resultat, scale, ref r, BruitRayon, AmplitudeBruitMax, R0Max, RaideurCassureMax, HauteurCassureMax, RaideurDepressionMax, AmplitudeDepressionMax, RaideurRebondMax, H0Max,AttenuationLissageMax,RayonLissageRelatifMax);
+                visu2D(resultat, false).Save("D:/lab/Terrain/bombe" + i + ".bmp");
+            }
+            return resultat;
+        }
         //Lacs
 #pragma warning disable CS0659 // Le type se substitue à Object.Equals(object o) mais pas à Object.GetHashCode()
         public class Case

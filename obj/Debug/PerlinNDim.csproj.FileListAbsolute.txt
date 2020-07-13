@@ -5,3 +5,10 @@ C:\Users\benja\source\repos\PerlinNDim\PerlinNDim\bin\Debug\Geologik.exe
 C:\Users\benja\source\repos\PerlinNDim\PerlinNDim\bin\Debug\Geologik.pdb
 C:\Users\benja\source\repos\PerlinNDim\PerlinNDim\obj\Debug\Geologik.exe
 C:\Users\benja\source\repos\PerlinNDim\PerlinNDim\obj\Debug\Geologik.pdb
+E:\Mes Fichiers\Programmes\C#\PerlinNDim\PerlinNDim\bin\Debug\Geologik.exe.config
+E:\Mes Fichiers\Programmes\C#\PerlinNDim\PerlinNDim\bin\Debug\Geologik.exe
+E:\Mes Fichiers\Programmes\C#\PerlinNDim\PerlinNDim\bin\Debug\Geologik.pdb
+E:\Mes Fichiers\Programmes\C#\PerlinNDim\PerlinNDim\obj\Debug\PerlinNDim.csprojAssemblyReference.cache
+E:\Mes Fichiers\Programmes\C#\PerlinNDim\PerlinNDim\obj\Debug\PerlinNDim.csproj.CoreCompileInputs.cache
+E:\Mes Fichiers\Programmes\C#\PerlinNDim\PerlinNDim\obj\Debug\Geologik.exe
+E:\Mes Fichiers\Programmes\C#\PerlinNDim\PerlinNDim\obj\Debug\Geologik.pdb
